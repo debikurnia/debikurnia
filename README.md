@@ -4,7 +4,7 @@ Product builder focused on web platforms, automation, and digital infrastructure
 
 I design and build practical systems for digital operations, product development, and workflow automation.
 
-This profile serves as a public archive for selected projects, tools, and technical experiments.
+This profile serves as a public overview of my work across selected projects, tools, and technical experiments.
 
 ## Focus Areas
 
