@@ -1,4 +1,4 @@
-<div align="center">
+<div align="left">
 
 # Debi Kurnia
 
@@ -24,7 +24,7 @@ Older work and writing lives at [debikurnia.id](https://debikurnia.id) and [elys
 
 ## Tech I use
 
-<p align="center">
+<p align="left">
   <img src="https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=white" alt="PHP">
   <img src="https://img.shields.io/badge/Laravel-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel">
   <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
@@ -38,12 +38,6 @@ Older work and writing lives at [debikurnia.id](https://debikurnia.id) and [elys
 
 I tracked down the cause of an approval-prompt loop in Kiro CLI and proposed a fix.
 Details: [kirodotdev/Kiro#9507](https://github.com/kirodotdev/Kiro/issues/9507#issuecomment-4808333640).
-
-## GitHub
-
-<div align="center">
-  <img height="165" src="https://github-readme-stats.vercel.app/api?username=debikurnia&show_icons=true&hide_border=true&theme=tokyonight" alt="GitHub stats">
-</div>
 
 ## Work with me
 
