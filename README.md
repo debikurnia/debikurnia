@@ -45,10 +45,6 @@ AI integrations:
 
 ## Open source
 
-[XRecord](https://github.com/debikurnia/xrecord) is a lightweight screen recorder for macOS with
-automatic zoom, written in native Swift. No runtime dependencies, and capture plus rendering both
-run locally, so nothing leaves the machine.
-
 [Opustock Skills](https://github.com/debikurnia/opustock-skills) is an open source toolkit that
 cleans up stock asset metadata before submission, keeping titles and keywords accurate,
 platform-safe, and free of AI-tool traces.
