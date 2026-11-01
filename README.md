@@ -34,7 +34,7 @@ so several Google accounts can sit side by side without ever mixing.
 
 <p>
   <a href="https://github.com/XNyetok/XSpace/releases/latest"><img src="https://img.shields.io/github/v/release/XNyetok/XSpace?style=for-the-badge&label=Download&logo=apple&logoColor=white&color=6E40C9" alt="Download the latest XSpace release"></a>
-  <img src="https://img.shields.io/badge/macOS-14%2B-24292F?style=for-the-badge" alt="macOS 14+">
+  <img src="https://img.shields.io/badge/macOS-26%2B-24292F?style=for-the-badge" alt="macOS 26+">
   <img src="https://img.shields.io/github/license/XNyetok/XSpace?style=for-the-badge&color=24292F" alt="License">
 </p>
 
