@@ -5,7 +5,7 @@ Founder of [Opustock](https://opustock.com) · Jakarta, Indonesia · Open to fre
 
 <a href="https://debikurnia.id"><img src="https://img.shields.io/badge/Website-debikurnia.id-6E40C9?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Website"></a>
 <a href="https://www.linkedin.com/in/debikurnia"><img src="https://raw.githubusercontent.com/debikurnia/debikurnia/main/assets/badge-linkedin.svg" alt="LinkedIn"></a>
-<a href="mailto:kontak@debikurnia.id"><img src="https://img.shields.io/badge/Email-kontak@debikurnia.id-6E40C9?style=for-the-badge&logo=mailbox&logoColor=white" alt="Email"></a>
+<a href="mailto:debi@elysiumx.org"><img src="https://img.shields.io/badge/Email-debi@elysiumx.org-6E40C9?style=for-the-badge&logo=mailbox&logoColor=white" alt="Email"></a>
 
 ## Currently building
 
@@ -89,7 +89,7 @@ I take freelance and product work, mostly:
 - Laravel products, from first version to production
 - Small native macOS utilities in Swift, like [XSpace](https://github.com/XNyetok/XSpace) and [Jambul](https://github.com/XNyetok/Jambul)
 
-Email [kontak@debikurnia.id](mailto:kontak@debikurnia.id) or start at [debikurnia.id](https://debikurnia.id).
+Email [debi@elysiumx.org](mailto:debi@elysiumx.org) or start at [debikurnia.id](https://debikurnia.id).
 
 <p>
   <img src="https://img.shields.io/badge/Open_to-Freelance-22C55E?style=for-the-badge&logo=handshake&logoColor=white" alt="Open to freelance">
