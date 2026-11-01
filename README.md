@@ -40,9 +40,29 @@ so several Google accounts can sit side by side without ever mixing.
 
 It is still early (the UI is in Indonesian for now and localization is planned), and contributions are welcome.
 
-**Contribution:** traced the Kiro CLI "Always allow" approval loop to its policy compiler turning backslashes into slashes
-in shell rules, so a saved rule never matched the command it was saved for. Root cause and a capability-aware fix:
-[kirodotdev/Kiro#9507](https://github.com/kirodotdev/Kiro/issues/9507#issuecomment-4808333640).
+### [Jambul](https://github.com/XNyetok/Jambul)
+
+A Dynamic Island for the MacBook notch. Hover over the notch to open it, move away to close it, or click to toggle.
+Running activities rest beside the notch, and short messages called peeks slide out when something happens.
+
+- **Activities:** a 5, 15 or 25 minute timer, Keep Awake for long builds and coding agents, and battery peeks when the charger goes in or out or the battery runs low.
+- **Light on resources:** native Swift with SwiftUI and AppKit, and no third-party code. It reacts to system events instead of polling. In my test it idled at 0% CPU and about 14&nbsp;MB of memory.
+- **Offline and private:** no network connections and no data collected. Settings stay on your Mac.
+
+<p>
+  <a href="https://github.com/XNyetok/Jambul/releases/latest"><img src="https://img.shields.io/github/v/release/XNyetok/Jambul?style=for-the-badge&label=Download&logo=apple&logoColor=white&color=6E40C9" alt="Download the latest Jambul release"></a>
+  <img src="https://img.shields.io/badge/macOS-14%2B-24292F?style=for-the-badge" alt="macOS 14+">
+  <img src="https://img.shields.io/github/license/XNyetok/Jambul?style=for-the-badge&color=24292F" alt="License">
+</p>
+
+It is early, and the [roadmap](https://github.com/XNyetok/Jambul/blob/main/docs/ROADMAP.md) lists what may come next, such as prayer times
+and a peek when a coding agent finishes. Contributions are welcome.
+
+### Contributions to other projects
+
+- **Kiro CLI:** traced the "Always allow" approval loop to its policy compiler turning backslashes into slashes
+  in shell rules, so a saved rule never matched the command it was saved for. Root cause and a capability-aware fix:
+  [kirodotdev/Kiro#9507](https://github.com/kirodotdev/Kiro/issues/9507#issuecomment-4808333640).
 
 ## Tech I use
 
@@ -67,7 +87,7 @@ I take freelance and product work, mostly:
 - AI features for existing web apps: LLM integrations, batch processing, prompt pipelines
 - Automation behind the scenes: data cleanup, content workflows, internal tools
 - Laravel products, from first version to production
-- Small native macOS utilities in Swift
+- Small native macOS utilities in Swift, like [XSpace](https://github.com/XNyetok/XSpace) and [Jambul](https://github.com/XNyetok/Jambul)
 
 Email [kontak@debikurnia.id](mailto:kontak@debikurnia.id) or start at [debikurnia.id](https://debikurnia.id).
 
