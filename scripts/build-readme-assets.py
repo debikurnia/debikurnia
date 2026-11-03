@@ -26,7 +26,8 @@ THEMES = {
         "green": "#1a7f37", "blue": "#0969da", "red": "#cf222e", "grid": 0.055, "glow": 0.16,
         "tint": 0.08, "edge": 0.30, "skeleton": 0.13, "button": "#f6f8fa", "primary": "#6e40c9",
         "wall_a": "#e9e3ff", "wall_b": "#dcecff", "menubar": "#ffffff", "menubar_opacity": 0.6,
-        "thumb_glyph": 0.75,
+        "thumb_glyph": 0.75, "teal": "#0b7f72", "magenta": "#d6006f", "sidebar": 0.035, "line_art": 0.55,
+        "icon_edge": 0,
     },
     "dark": {
         "card": "#161b22", "raised": "#0d1117", "border": "#30363d", "fg": "#e6edf3",
@@ -34,7 +35,8 @@ THEMES = {
         "green": "#3fb950", "blue": "#4493f8", "red": "#f85149", "grid": 0.05, "glow": 0.22,
         "tint": 0.13, "edge": 0.38, "skeleton": 0.16, "button": "#21262d", "primary": "#8957e5",
         "wall_a": "#221a4d", "wall_b": "#0c1a33", "menubar": "#000000", "menubar_opacity": 0.35,
-        "thumb_glyph": 0.45,
+        "thumb_glyph": 0.45, "teal": "#22a897", "magenta": "#ff4d9e", "sidebar": 0.04, "line_art": 0.5,
+        "icon_edge": 0.12,
     },
 }
 
@@ -141,6 +143,41 @@ PULSE_CSS = (
     "@keyframes pulse{0%{transform:scale(1);opacity:.6}70%,100%{transform:scale(2.8);opacity:0}}"
     ".pulse{opacity:0;animation:pulse 2.4s ease-out infinite}"
 )
+
+# The rounded square that the Havus icon and the Nyetok logo share, on their 1024-unit grid (it spans 100 to 924).
+SQUIRCLE = ("M396.64 100h230.72c103.83 0 155.75 0 195.41 20.21a185.4 185.4 0 0 1 81.02 81.02C924 240.89 924 292.81 924 "
+            "396.64v230.72c0 103.83 0 155.75-20.21 195.41a185.4 185.4 0 0 1-81.02 81.02C783.11 924 731.19 924 627.36 "
+            "924H396.64c-103.83 0-155.75 0-195.41-20.21a185.4 185.4 0 0 1-81.02-81.02C100 783.11 100 731.19 100 "
+            "627.36V396.64c0-103.83 0-155.75 20.21-195.41a185.4 185.4 0 0 1 81.02-81.02C240.89 100 292.81 100 "
+            "396.64 100Z")
+# Havus: an H split by a 70° cut, white on ink (design/AppIcon.svg in XNyetok/Havus).
+HAVUS_H = "M288 288H392V464H514.57L482.54 552H392V728H288ZM736 736H632V560H509.43L541.46 472H632V296H736Z"
+HAVUS_INK = "#0b0b0c"
+# Nyetok: an N split by the same cut, white on magenta (design/logo.svg in the Nyetok website).
+NYETOK_N = ("M288 728V288h104l129.98 151.64-40.88 112.31L392 448v280ZM736 296v440H632L502.02 584.36l40.88-112.31L632 "
+            "576V296Z")
+NYETOK_MAGENTA = "#d6006f"
+
+
+def logo(t, x, y, size, tile, glyph, *, edge=False):
+    """An app icon or logo on its rounded square, top-left corner at x, y. `edge` outlines a dark tile in dark mode."""
+    k = size / 824
+    stroke = (f' stroke="#fff" stroke-opacity="{t["icon_edge"]}" stroke-width="{1 / k:.1f}"'
+              if edge and t["icon_edge"] else "")
+    return (f'<g transform="translate({x:g} {y:g}) scale({k:.5f}) translate(-100 -100)">'
+            f'<path d="{SQUIRCLE}" fill="{tile}"{stroke}/><path d="{glyph}" fill="#fff"/></g>')
+
+
+def sparkle(cx, cy, r, color, extra=""):
+    """A four-point star, like the ones on nyetok.id."""
+    a = r * 0.16
+    pts = [(cx, cy - r), (cx + r, cy), (cx, cy + r), (cx - r, cy)]
+    ctl = [(cx + a, cy - a), (cx + a, cy + a), (cx - a, cy + a), (cx - a, cy - a)]
+    d = f"M{pts[0][0]:g} {pts[0][1]:g}" + "".join(
+        f"C{ctl[i][0]:g} {ctl[i][1]:g} {ctl[i][0]:g} {ctl[i][1]:g} {pts[(i + 1) % 4][0]:g} {pts[(i + 1) % 4][1]:g}"
+        for i in range(4)
+    )
+    return f'<path d="{d}Z" fill="{color}"{extra}/>'
 
 
 # ---------------------------------------------------------------------------------------------- cards
@@ -267,14 +304,24 @@ APP = (500, 310)  # half-width card with a picture on top
 SLIM = (500, 160)  # half-width card with a few lines and a small glyph
 
 
-def app_card(t, name, art, desc, stat, labels):
-    chip_row, _ = chips(t, 36, 258, labels, t["accent"], size=12, pad=10, ink=t["fg"])
+def app_card(t, name, art, desc, stat, labels, *, kicker="OPEN SOURCE · MACOS · MIT", color=None, badge=None,
+             mark=""):
+    """`mark` is a 26-unit logo drawn left of the name; `badge` is a small green tag right of it."""
+    color = color or t["accent"]
+    name_x = 70 if mark else 35
+    chip_row, _ = chips(t, 36, 258, labels, color, size=12, pad=10, ink=t["fg"])
+    tag = ""
+    if badge:
+        tag, _ = chip(t, name_x + width(name, 28, bold=True, spacing=-0.4) + 10, 173, badge, t["green"], size=10.5,
+                      height=20, pad=8, mono=True, spacing=1)
     return (
         frame(t, 8, 8, APP[0] - 16, APP[1] - 16)
         + art
-        + eyebrow(36, 158, "OPEN SOURCE · MACOS · MIT", t["accent"])
+        + eyebrow(36, 158, kicker, color)
         + arrow(452, 147, t["subtle"])
-        + text(35, 193, name, size=28, fill=t["fg"], weight=700, spacing=-0.4)
+        + mark
+        + text(name_x, 193, name, size=28, fill=t["fg"], weight=700, spacing=-0.4)
+        + tag
         + text(36, 221, escape(desc), size=15.5, fill=t["fg"])
         + text(36, 244, escape(stat), size=14, fill=t["muted"])
         + chip_row
@@ -369,10 +416,155 @@ def jambul(t):
         + island
     )
     body = app_card(t, "Jambul", art, "A Dynamic Island for the MacBook notch.",
-                    "In my test: 0% CPU idle, about 14 MB.", ["Timer", "Keep Awake", "Battery peeks"])
+                    "In my test: 0% CPU idle, about 14 MB.",
+                    ["Timer", "Keep Awake", "Battery peeks", "AI usage limits"])
     label = ("Jambul, open source macOS app under the MIT license: a Dynamic Island for the MacBook notch, with a "
-             "timer, Keep Awake and battery peeks. In my test it idled at 0% CPU and about 14 MB of memory.")
+             "timer, Keep Awake, battery peeks and your AI usage limits. In my test it idled at 0% CPU and about 14 MB "
+             "of memory.")
     return svg(*APP, label, body, defs, css)
+
+
+def havus(t):
+    """The app after a scan, as the Havus website draws it: sidebar, the total, checked rows with their sizes."""
+    wx, wy, ww, wh = 36, 30, 428, 96
+    sx = wx + 112  # the sidebar's right edge
+    mx, mr = sx + 14, wx + ww - 14  # the main area's content edges
+    fg, sk, teal = t["fg"], t["skeleton"], t["teal"]
+    art = [
+        f'<rect x="{wx}" y="{wy}" width="{ww}" height="{wh}" rx="10" fill="{t["raised"]}" stroke="{t["border"]}"/>',
+        f'<path d="M{sx} {wy}H{wx + 10}a10 10 0 0 0-10 10V{wy + wh - 10}a10 10 0 0 0 10 10H{sx}Z" fill="{fg}" '
+        f'fill-opacity="{t["sidebar"]}"/>',
+        f'<path d="M{sx} {wy}V{wy + wh}" stroke="{t["border"]}"/>',
+    ]
+    for i, c in enumerate(["#ff5f57", "#febc2e", "#28c840"]):
+        art.append(f'<circle cx="{wx + 14 + i * 13}" cy="{wy + 11}" r="3.8" fill="{c}"/>')
+    # Overview, system junk, developer junk (open), uninstaller, large files.
+    for i, (tone, lw) in enumerate([(t["subtle"], 40), (t["blue"], 52), (teal, 58), (t["accent"], 46),
+                                    (t["green"], 54)]):
+        cy = wy + 29 + i * 14
+        if i == 2:
+            art.append(f'<rect x="{wx + 6}" y="{cy - 6.5}" width="{sx - wx - 12}" height="13" rx="4" '
+                       f'fill="{t["raised"]}" stroke="{t["border"]}"/>')
+        art.append(f'<rect x="{wx + 13}" y="{cy - 3.5}" width="7" height="7" rx="2" fill="{tone}"/>'
+                   f'<rect x="{wx + 26}" y="{cy - 2.5}" width="{lw}" height="5" rx="2.5" fill="{fg}" '
+                   f'fill-opacity="{sk * (2 if i == 2 else 1.2):.2f}"/>')
+    total = "11.1 GB"
+    art.append(text(mx, wy + 26, total, size=17, fill=fg, weight=700, spacing=-0.3)
+               + f'<rect x="{mx + width(total, 17, bold=True, spacing=-0.3) + 8:.1f}" y="{wy + 17.5}" width="58" '
+               f'height="6" rx="3" fill="{fg}" fill-opacity="{sk * 1.3:.2f}"/>')
+    # The clean button: a trash glyph and its label.
+    bx, by = mr - 48, wy + 10
+    gx, gy = bx + 13, by + 9.5
+    art.append(f'<rect x="{bx}" y="{by}" width="48" height="19" rx="6" fill="{fg}"/>'
+               f'<path d="M{gx - 4.4} {gy - 2.8}H{gx + 4.4}M{gx - 1.5} {gy - 2.8}V{gy - 4.3}H{gx + 1.5}V{gy - 2.8}'
+               f'M{gx - 3.2} {gy - 2.8}l.6 7h5.2l.6-7" fill="none" stroke="{t["raised"]}" stroke-width="1.3" '
+               'stroke-linecap="round" stroke-linejoin="round"/>'
+               f'<rect x="{gx + 8}" y="{gy - 2}" width="16" height="4" rx="2" fill="{t["raised"]}" '
+               'fill-opacity=".75"/>')
+    # The scan's progress bar, then a check lands on each row.
+    art.append(f'<rect x="{mx}" y="{wy + 33}" width="{mr - mx}" height="3" rx="1.5" fill="{fg}" fill-opacity=".08"/>'
+               f'<rect class="scan" x="{mx}" y="{wy + 33}" width="{mr - mx}" height="3" rx="1.5" fill="{teal}"/>')
+    for i, (tone, lw, size) in enumerate([(t["blue"], 104, "8.4 GB"), (t["red"], 78, "2.1 GB"),
+                                          (t["accent"], 60, "640 MB")]):
+        cy = wy + 49 + i * 18
+        if i:
+            art.append(f'<path d="M{mx} {cy - 9}H{mr}" stroke="{t["border"]}" stroke-opacity=".7"/>')
+        art.append(
+            f'<rect x="{mx + 0.5}" y="{cy - 5}" width="10" height="10" rx="3" fill="none" stroke="{t["border"]}"/>'
+            f'<g class="grow" style="animation:ok 7s {0.15 + i * 0.25:.2f}s infinite both">'
+            f'<rect x="{mx}" y="{cy - 5.5}" width="11" height="11" rx="3.2" fill="{teal}"/>'
+            f'<path d="M{mx + 3} {cy + 0.2}l2 2 3.5-4" fill="none" stroke="#fff" stroke-width="1.6" '
+            'stroke-linecap="round" stroke-linejoin="round"/></g>'
+            f'<rect x="{mx + 17}" y="{cy - 6}" width="12" height="12" rx="3.5" fill="{tone}" '
+            f'fill-opacity="{t["tint"] * 2.2:.2f}"/>'
+            f'<rect x="{mx + 20.5}" y="{cy - 2.5}" width="5" height="5" rx="1.5" fill="{tone}"/>'
+            f'<rect x="{mx + 36}" y="{cy - 3}" width="{lw}" height="6" rx="3" fill="{fg}" fill-opacity="{sk * 2:.2f}"/>'
+            + text(mr, cy + 3.6, size, size=10.5, fill=fg, weight=600, mono=True, anchor="end")
+        )
+    css = (
+        "@keyframes scan{0%{transform:scaleX(0);opacity:1}30%,90%{transform:scaleX(1);opacity:1}"
+        "97%,100%{transform:scaleX(1);opacity:0}}"
+        ".scan{transform-box:fill-box;transform-origin:left center;"
+        "animation:scan 7s cubic-bezier(.32,.72,0,1) infinite}"
+        "@keyframes ok{0%,30%{opacity:0;transform:scale(.4)}36%,90%{opacity:1;transform:scale(1)}97%,100%{opacity:0}}"
+    )
+    body = app_card(t, "Havus", "".join(art), "A Mac cleaner that minds its own business.",
+                    "In my test: 1.5 MB app, about 34 MB idle.", ["Developer junk", "Uninstaller", "Trash first"],
+                    badge="NEW")
+    label = ("Havus, new open source macOS app under the MIT license: a lightweight Mac cleaner that minds its own "
+             "business. It clears caches, logs and developer junk, uninstalls apps with their leftovers and finds "
+             "large files you rarely open, and everything goes to the Trash first. In my test it is a 1.5 MB app that "
+             "idles at about 34 MB of memory, with no network access at all.")
+    return svg(*APP, label, body, css=css)
+
+
+def nyetok(t):
+    """Nyetok means stocking up: a shelf with a box per app, Havus popping out of the newest, and one for the next."""
+    ink, line = t["fg"], t["line_art"]
+    # The shelf sits where the other cards' pictures end (y 126), so the text below lines up across a row.
+    bw, bh, gap, floor = 84, 52, 16, 125.25
+    top = floor - bh
+
+    def stroke(dashed=False):
+        return (f'stroke="{ink}" stroke-opacity="{line}" stroke-width="1.5" stroke-linejoin="round"'
+                + (' stroke-dasharray="3 3.5"' if dashed else ""))
+
+    def box(x, label, contents="", dashed=False):
+        """An open box seen from a little above: its back rim, what sticks out of it, then the front."""
+        rim = (f'<path d="M{x + 6} {top - 8}H{x + bw - 6}L{x + bw} {top}H{x}Z" fill="{ink}" '
+               f'fill-opacity="{0 if dashed else 0.07}" {stroke(dashed)}/>')
+        front = (f'<rect x="{x}" y="{top}" width="{bw}" height="{bh}" rx="3" '
+                 f'fill="{"none" if dashed else t["raised"]}" {stroke(dashed)}/>')
+        plate_dash = ' stroke-dasharray="3 3"' if dashed else ""
+        plate = (f'<rect x="{x + 13}" y="{top + 15}" width="{bw - 26}" height="17" rx="3" fill="{t["card"]}" '
+                 f'stroke="{t["border"]}"{plate_dash}/>'
+                 + text(x + bw / 2 + 0.6, top + 26.9, label, size=9.5, fill=t["subtle"] if dashed else ink,
+                        weight=700, mono=True, spacing=1.2, anchor="middle"))
+        stamp = "" if dashed else logo(t, x + bw - 16, top + bh - 16, 10, NYETOK_MAGENTA, NYETOK_N)
+        return rim + contents + front + plate + stamp
+
+    xs = [250 - (4 * bw + 3 * gap) / 2 + i * (bw + gap) for i in range(4)]
+    # Havus, the newest app, bobs out of its box with a few sparkles.
+    hx = xs[0] + bw / 2 - 15
+    havus_icon = (f'<g class="bob"><g transform="rotate(-8 {hx + 15} {top - 11})">'
+                  + logo(t, hx, top - 27, 30, HAVUS_INK, HAVUS_H, edge=True) + "</g></g>")
+    sparkles = "".join(
+        sparkle(cx, cy, r, t["magenta"], f' class="grow tw" style="animation-delay:{delay}s"')
+        for cx, cy, r, delay in [(xs[0] + 70, top - 25, 5.2, 0), (xs[0] + 16, top - 17, 3.6, 0.9),
+                                 (xs[0] + 88, top - 13, 2.8, 1.6)]
+    )
+    # XSpace: three panes in its icon's profile colors. Jambul: the island.
+    px = xs[1] + bw / 2 - 19.5
+    panes = "".join(
+        f'<rect x="{px + i * 14:g}" y="{top - 13 + (i % 2) * 3}" width="11" height="15" rx="2" fill="{c}"/>'
+        f'<rect x="{px + 2 + i * 14:g}" y="{top - 8 + (i % 2) * 3}" width="7" height="2" rx="1" fill="#fff" '
+        'fill-opacity=".8"/>'
+        for i, c in enumerate(["#0a84ff", "#30d158", "#ff9f0a"])
+    )
+    island = (f'<rect x="{xs[2] + bw / 2 - 15}" y="{top - 9}" width="30" height="10" rx="5" fill="#000"'
+              + (' stroke="#fff" stroke-opacity=".14"' if t is THEMES["dark"] else "") + "/>"
+              f'<circle cx="{xs[2] + bw / 2 + 8}" cy="{top - 4}" r="2" fill="#3fb950"/>')
+    art = (
+        f'<path d="M44 {floor + 0.75}H456" fill="none" {stroke()} stroke-linecap="round"/>'
+        + box(xs[0], "HAVUS", havus_icon)
+        + sparkles
+        + box(xs[1], "XSPACE", panes)
+        + box(xs[2], "JAMBUL", island)
+        + box(xs[3], "NEXT", dashed=True)
+    )
+    css = (
+        "@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}"
+        ".bob{animation:bob 3.4s ease-in-out infinite}"
+        "@keyframes tw{0%,100%{opacity:.3;transform:scale(.55)}50%{opacity:1;transform:scale(1)}}"
+        ".tw{animation:tw 2.6s ease-in-out infinite both}"
+    )
+    body = app_card(t, "Nyetok", art, "Small Mac apps that are actually useful.",
+                    "Native Swift, MIT-licensed, made in Indonesia.", ["Free", "No account", "No telemetry"],
+                    kicker="HOME OF MY APPS · NYETOK.ID", color=t["magenta"],
+                    mark=logo(t, 36, 171, 26, NYETOK_MAGENTA, NYETOK_N))
+    label = ("Nyetok, the home of my open source Mac apps, at nyetok.id: small Mac apps that are actually useful. "
+             "Native Swift, MIT-licensed and made in Indonesia; free, with no account and no telemetry.")
+    return svg(*APP, label, body, css=css)
 
 
 def slim_card(t, eyebrow_label, name, lines, art):
@@ -491,7 +683,8 @@ def ai_tiles(t):
 
 
 CARDS = {
-    "hero": hero, "opustock": opustock, "xspace": xspace, "jambul": jambul, "kiro": kiro, "elysiumx": elysiumx,
+    "hero": hero, "opustock": opustock, "nyetok": nyetok, "havus": havus, "xspace": xspace, "jambul": jambul,
+    "kiro": kiro, "elysiumx": elysiumx,
     "btn-website": lambda t: button(t, "debikurnia.id", globe),
     "btn-linkedin": lambda t: button(t, "LinkedIn", linkedin),
     "btn-email": lambda t: button(t, "Email me", envelope, primary=True),
