@@ -162,6 +162,9 @@ NYETOK_MAGENTA = "#d6006f"
 KORUPSI_ENVELOPE = ('<rect width="38" height="25" rx="4" fill="#e3b04b"/><path d="M2 3.5L19 15.5L36 3.5" fill="none" '
                     'stroke="#a87b23" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>'
                     '<circle cx="19" cy="19" r="4.6" fill="#d9483b"/>')
+# Jambul: SwiftUI's orange and cyan as the island's dark appearance draws them, the timer's and Keep Awake's colors.
+JAMBUL_ORANGE = "#ff9f0a"
+JAMBUL_CYAN = "#64d2ff"
 # Jelajah Kerinci: Gunung Kerinci over green hills (icons/icon.svg in XNyetok/Kerinciku), on its 512-unit grid; the
 # mountain's foot spans 36 to 476 at y 380.
 KERINCI_MOUNTAIN = ('<path d="M36 380L228 150Q256 130 284 150L476 380z" fill="#5f7d8c"/>'
@@ -311,26 +314,22 @@ def opustock(t):
 
 
 APP = (500, 310)  # half-width card with a picture on top
-SLIM = (500, 160)  # half-width card with a few lines and a small glyph
 
 
-def app_card(t, name, art, desc, stat, labels, *, kicker="OPEN SOURCE · MACOS · MIT", color=None, badge=None,
-             mark=""):
-    """`mark` is a 26-unit logo drawn left of the name; `badge` is a small green tag right of it."""
+def app_card(t, name, art, desc, stat, labels, *, kicker="OPEN SOURCE · MACOS · MIT", color=None, badge=None):
+    """`badge` is a small green tag right of the name."""
     color = color or t["accent"]
-    name_x = 70 if mark else 35
     chip_row, _ = chips(t, 36, 258, labels, color, size=12, pad=10, ink=t["fg"])
     tag = ""
     if badge:
-        tag, _ = chip(t, name_x + width(name, 28, bold=True, spacing=-0.4) + 10, 173, badge, t["green"], size=10.5,
+        tag, _ = chip(t, 35 + width(name, 28, bold=True, spacing=-0.4) + 10, 173, badge, t["green"], size=10.5,
                       height=20, pad=8, mono=True, spacing=1)
     return (
         frame(t, 8, 8, APP[0] - 16, APP[1] - 16)
         + art
         + eyebrow(36, 158, kicker, color)
         + arrow(452, 147, t["subtle"])
-        + mark
-        + text(name_x, 193, name, size=28, fill=t["fg"], weight=700, spacing=-0.4)
+        + text(35, 193, name, size=28, fill=t["fg"], weight=700, spacing=-0.4)
         + tag
         + text(36, 221, escape(desc), size=15.5, fill=t["fg"])
         + text(36, 244, escape(stat), size=14, fill=t["muted"])
@@ -339,6 +338,8 @@ def app_card(t, name, art, desc, stat, labels, *, kicker="OPEN SOURCE · MACOS �
 
 
 def jambul(t):
+    """The island as Jambul 0.5.0 shows a timer and Keep Awake at once: the timer outranks Keep Awake, so its countdown
+    keeps the right of the notch in its orange, and Keep Awake's eyes sit on the left (IslandContent.swift)."""
     sx, sy, sw, sh = 36, 30, 428, 96
     cx = sx + sw / 2
     defs = (
@@ -346,11 +347,7 @@ def jambul(t):
         f'<stop offset="1" stop-color="{t["wall_b"]}"/></linearGradient>'
         f'<clipPath id="screen"><rect x="{sx}" y="{sy}" width="{sw}" height="{sh}" rx="10"/></clipPath>'
     )
-    ring_r = 7
-    circ = 2 * 3.14159 * ring_r  # the ring's length, which the countdown animates
     css = (
-        f"@keyframes tick{{from{{stroke-dashoffset:0}}to{{stroke-dashoffset:{circ:.2f}}}}}"
-        ".ring{animation:tick 9s linear infinite}"
         "@keyframes blink{0%,44%,52%,100%{transform:scaleY(1)}48%{transform:scaleY(.1)}}"
         ".eye{animation:blink 4.6s ease-in-out infinite}"
     )
@@ -367,18 +364,22 @@ def jambul(t):
     )
     iw, ih = 222, 34
     il = cx - iw / 2
+    # Keep Awake's eyes at Jambul's compact size, scaled to this island: two capsules, each with a white glint
+    # (KeepAwakeEyes.swift). They blink now and then.
+    s = 1.25
+    ew, eh, egap = 6.5 * s, 10 * s, 3 * s
+    ex, ey = il + 16, sy + ih / 2 - eh / 2
+    eyes = "".join(
+        f'<rect x="{x:.2f}" y="{ey:.2f}" width="{ew:.2f}" height="{eh:.2f}" rx="{ew / 2:.2f}" fill="{JAMBUL_CYAN}"/>'
+        f'<circle cx="{x + 2.25 * s:.2f}" cy="{ey + 2.5 * s:.2f}" r="{1.1 * s:.2f}" fill="#fff" fill-opacity=".9"/>'
+        for x in (ex, ex + ew + egap)
+    )
     island = (
         f'<path d="{notch_path(cx, sy, iw, ih, ear=7, radius=14)}" fill="#000"'
         + (' stroke="#fff" stroke-opacity=".08"' if t is THEMES["dark"] else "") + "/>"
-        f'<circle cx="{il + 22}" cy="{sy + 17}" r="{ring_r}" fill="none" stroke="#fff" stroke-opacity=".2" '
-        'stroke-width="2.6"/>'
-        f'<circle class="ring" cx="{il + 22}" cy="{sy + 17}" r="{ring_r}" fill="none" stroke="{THEMES["dark"]["accent"]}" '
-        f'stroke-width="2.6" stroke-linecap="round" stroke-dasharray="{circ:.2f}" stroke-dashoffset="{circ * 0.3:.2f}" '
-        f'transform="rotate(-90 {il + 22} {sy + 17})"/>'
-        + text(il + 35, sy + 21.5, "14:59", size=12, fill="#fff", weight=600, mono=True)
+        f'<g class="grow eye">{eyes}</g>'
         + f'<circle cx="{cx}" cy="{sy + 9}" r="2.4" fill="#16161a" stroke="#26262c"/>'
-        f'<g class="grow eye"><path d="M{il + iw - 34} {sy + 17}q9-8 18 0q-9 8-18 0Z" fill="#fff"/>'
-        f'<circle cx="{il + iw - 25}" cy="{sy + 17}" r="2.6" fill="#000"/></g>'
+        + text(il + iw - 16, sy + 21.6, "14:59", size=13, fill=JAMBUL_ORANGE, weight=600, anchor="end")
     )
     art = (
         f'<rect x="{sx}" y="{sy}" width="{sw}" height="{sh}" rx="10" fill="url(#wall)" stroke="{t["border"]}"/>'
@@ -389,11 +390,12 @@ def jambul(t):
         + island
     )
     body = app_card(t, "Jambul", art, "A Dynamic Island for the MacBook notch.",
-                    "In my test: 0% CPU idle, about 14 MB.",
+                    "Aims for about 0% CPU idle, under 30 MB.",
                     ["Timer", "Keep Awake", "AI usage limits", "Claude Code sessions"])
     label = ("Jambul, open source macOS app under the MIT license: a Dynamic Island for the MacBook notch, with a "
-             "timer, Keep Awake, battery peeks, your AI usage limits and which Claude Code sessions are working, "
-             "waiting for you or done. In my test it idled at 0% CPU and about 14 MB of memory.")
+             "timer whose dial shrinks like a kitchen timer's, Keep Awake and its pair of eyes, battery peeks, your AI "
+             "usage limits and which Claude Code sessions are working, waiting for you or done. It aims for about 0% "
+             "CPU while idle and less than 30 MB of memory.")
     return svg(*APP, label, body, defs, css)
 
 
@@ -473,12 +475,16 @@ def havus(t):
 
 
 def nyetok(t):
-    """Nyetok means stocking up: a shelf with a box per project and a glimpse of what's in each, Gunung Kerinci
-    popping out of the newest, and an empty box for the next one."""
-    ink, line = t["fg"], t["line_art"]
-    # The shelf sits where the other cards' pictures end (y 126), so the text below lines up across a row.
-    bw, bh, gap, floor = 74, 52, 9, 125.25
+    """Nyetok means stocking up. Laid out like Opustock's card, full width: the words on the left, and on the right a
+    shelf with a box per project and a glimpse of what's in each, Gunung Kerinci popping out of the newest, and an
+    empty box for the next one."""
+    W, H = 1000, 230
+    ink, line, magenta = t["fg"], t["line_art"], t["magenta"]
+    # The shelf stands level with the chips, and its last box ends under the link above it.
+    bw, bh, gap, floor = 86, 70, 12, 196.25
     top = floor - bh
+    xs = [950 - 5 * bw - 4 * gap + i * (bw + gap) for i in range(5)]
+    mid = [x + bw / 2 for x in xs]
 
     def stroke(dashed=False):
         return (f'stroke="{ink}" stroke-opacity="{line}" stroke-width="1.5" stroke-linejoin="round"'
@@ -486,41 +492,39 @@ def nyetok(t):
 
     def box(x, label, contents="", dashed=False):
         """An open box seen from a little above: its back rim, what sticks out of it, then the front."""
-        rim = (f'<path d="M{x + 6} {top - 8}H{x + bw - 6}L{x + bw} {top}H{x}Z" fill="{ink}" '
+        rim = (f'<path d="M{x + 7} {top - 9}H{x + bw - 7}L{x + bw} {top}H{x}Z" fill="{ink}" '
                f'fill-opacity="{0 if dashed else 0.07}" {stroke(dashed)}/>')
         front = (f'<rect x="{x}" y="{top}" width="{bw}" height="{bh}" rx="3" '
                  f'fill="{"none" if dashed else t["raised"]}" {stroke(dashed)}/>')
         plate_dash = ' stroke-dasharray="3 3"' if dashed else ""
-        plate = (f'<rect x="{x + 9}" y="{top + 15}" width="{bw - 18}" height="17" rx="3" fill="{t["card"]}" '
+        plate = (f'<rect x="{x + 10}" y="{top + 21}" width="{bw - 20}" height="19" rx="3" fill="{t["card"]}" '
                  f'stroke="{t["border"]}"{plate_dash}/>'
-                 + text(x + bw / 2 + 0.5, top + 26.9, label, size=9.5, fill=t["subtle"] if dashed else ink,
-                        weight=700, mono=True, spacing=1, anchor="middle"))
-        stamp = "" if dashed else logo(t, x + bw - 15, top + bh - 15, 10, NYETOK_MAGENTA, NYETOK_N)
+                 + text(x + bw / 2 + 0.6, top + 34.3, label, size=10.5, fill=t["subtle"] if dashed else ink,
+                        weight=700, mono=True, spacing=1.2, anchor="middle"))
+        stamp = "" if dashed else logo(t, x + bw - 17, top + bh - 17, 11, NYETOK_MAGENTA, NYETOK_N)
         return rim + contents + front + plate + stamp
 
-    xs = [250 - (5 * bw + 4 * gap) / 2 + i * (bw + gap) for i in range(5)]
-    mid = [x + bw / 2 for x in xs]
     # Havus: its icon, leaning out of the box.
-    havus_icon = (f'<g transform="rotate(-8 {mid[0]:g} {top - 11})">'
-                  + logo(t, mid[0] - 15, top - 27, 30, HAVUS_INK, HAVUS_H, edge=True) + "</g>")
+    havus_icon = (f'<g transform="rotate(-8 {mid[0]:g} {top - 13})">'
+                  + logo(t, mid[0] - 17, top - 31, 34, HAVUS_INK, HAVUS_H, edge=True) + "</g>")
     # Jambul: the island.
-    island = (f'<rect x="{mid[1] - 15:g}" y="{top - 9}" width="30" height="10" rx="5" fill="#000"'
+    island = (f'<rect x="{mid[1] - 17:g}" y="{top - 10}" width="34" height="11" rx="5.5" fill="#000"'
               + (' stroke="#fff" stroke-opacity=".14"' if t is THEMES["dark"] else "") + "/>"
-              f'<circle cx="{mid[1] + 8:g}" cy="{top - 4}" r="2" fill="#3fb950"/>')
+              f'<circle cx="{mid[1] + 9:g}" cy="{top - 4.5}" r="2.2" fill="#3fb950"/>')
     # Korupsi: the envelope from its icon, seal and all.
-    envelope = (f'<g transform="rotate(9 {mid[2]:g} {top - 5}) translate({mid[2] - 14:g} {top - 14}) scale(.737)">'
+    envelope = (f'<g transform="rotate(9 {mid[2]:g} {top - 6}) translate({mid[2] - 16:g} {top - 16}) scale(.842)">'
                 + KORUPSI_ENVELOPE + "</g>")
     # Jelajah Kerinci, the newest: Gunung Kerinci from its icon bobs out of the box, with a few sparkles.
-    k = 56 / 440
-    mountain = (f'<g class="bob"><g transform="translate({mid[3] - 256 * k:.2f} {top + 6 - 380 * k:.2f}) '
+    k = 64 / 440
+    mountain = (f'<g class="bob"><g transform="translate({mid[3] - 256 * k:.2f} {top + 7 - 380 * k:.2f}) '
                 f'scale({k:.4f})">{KERINCI_MOUNTAIN}</g></g>')
     sparkles = "".join(
-        sparkle(cx, cy, r, t["magenta"], f' class="grow tw" style="animation-delay:{delay}s"')
-        for cx, cy, r, delay in [(mid[3] + 25, top - 26, 5.2, 0), (mid[3] - 27, top - 16, 3.6, 0.9),
-                                 (mid[3] + 33, top - 9, 2.8, 1.6)]
+        sparkle(cx, cy, r, magenta, f' class="grow tw" style="animation-delay:{delay}s"')
+        for cx, cy, r, delay in [(mid[3] + 29, top - 30, 6, 0), (mid[3] - 31, top - 18, 4.1, 0.9),
+                                 (mid[3] + 38, top - 10, 3.2, 1.6)]
     )
     art = (
-        f'<path d="M44 {floor + 0.75}H456" fill="none" {stroke()} stroke-linecap="round"/>'
+        f'<path d="M{xs[0] - 12} {floor + 0.75}H962" fill="none" {stroke()} stroke-linecap="round"/>'
         + box(xs[0], "HAVUS", havus_icon)
         + box(xs[1], "JAMBUL", island)
         + box(xs[2], "KORUPSI", envelope)
@@ -534,13 +538,23 @@ def nyetok(t):
         "@keyframes tw{0%,100%{opacity:.3;transform:scale(.55)}50%{opacity:1;transform:scale(1)}}"
         ".tw{animation:tw 2.6s ease-in-out infinite both}"
     )
-    body = app_card(t, "Nyetok", art, "Small apps that are actually useful.",
-                    "Mac apps and browser games, made in Indonesia.", ["Free", "Open source", "No account"],
-                    kicker="HOME OF MY APPS · NYETOK.ID", color=t["magenta"],
-                    mark=logo(t, 36, 171, 26, NYETOK_MAGENTA, NYETOK_N))
+    chip_row, _ = chips(t, 44, 182, ["OPEN SOURCE", "MIT LICENSE", "FREE", "NO ACCOUNT"], magenta, size=11,
+                        mono=True, spacing=1.2, pad=10)
+    body = (
+        frame(t, 8, 8, W - 16, H - 16)
+        + eyebrow(44, 50, "HOME OF MY APPS", magenta)
+        + text(930, 50, "NYETOK.ID", size=12, fill=t["subtle"], weight=600, mono=True, spacing=1.8, anchor="end")
+        + arrow(942, 39, t["subtle"])
+        + logo(t, 44, 72, 30, NYETOK_MAGENTA, NYETOK_N)
+        + text(85, 98, "Nyetok", size=33, fill=ink, weight=700, spacing=-0.8)
+        + text(44, 140, "Small apps that are actually useful.", size=21, fill=ink, weight=700)
+        + text(44, 166, "Mac apps and browser games, made in Indonesia.", size=15.5, fill=t["muted"])
+        + chip_row
+        + art
+    )
     label = ("Nyetok, the home of my open source apps, at nyetok.id: small apps that are actually useful. Mac apps "
              "and browser games, MIT-licensed and made in Indonesia; free, with no account.")
-    return svg(*APP, label, body, css=css)
+    return svg(W, H, label, body, css=css)
 
 
 # ------------------------------------------------------------------------------------------ game cards
@@ -813,68 +827,6 @@ def kerinci(t):
     return svg(*APP, label, body, clip, css)
 
 
-def slim_card(t, eyebrow_label, name, lines, art):
-    """Lines may hold <tspan> markup, so escape plain text before passing it in."""
-    return (
-        frame(t, 8, 8, SLIM[0] - 16, SLIM[1] - 16)
-        + eyebrow(36, 46, eyebrow_label, t["accent"])
-        + arrow(452, 35, t["subtle"])
-        + text(35, 78, name, size=22, fill=t["fg"], weight=700, spacing=-0.3)
-        + "".join(text(36, 105 + i * 21, line, size=14, fill=t["muted"]) for i, line in enumerate(lines))
-        + art
-    )
-
-
-def kiro(t):
-    def keycap(kx, ch):
-        return (
-            f'<rect x="{kx}" y="74" width="34" height="34" rx="8" fill="{t["raised"]}" stroke="{t["border"]}"/>'
-            f'<rect x="{kx + 3}" y="76" width="28" height="27" rx="6" fill="none" stroke="{t["border"]}" '
-            'stroke-opacity=".6"/>'
-            + text(kx + 17, 96, escape(ch), size=17, fill=t["fg"], weight=600, mono=True, anchor="middle")
-        )
-
-    art = (keycap(360, "\\") + text(413, 97, "≠", size=20, fill=t["red"], weight=700, anchor="middle")
-           + keycap(430, "/") + text(413, 128, "#9507", size=11, fill=t["subtle"], mono=True, anchor="middle"))
-    mono = f'<tspan class="mono" fill="{t["fg"]}">'
-    body = slim_card(t, "CONTRIBUTION", "Kiro CLI", [
-        "Traced the “Always allow” loop to its",
-        f"policy compiler turning {mono}\\</tspan> into {mono}/</tspan>.",
-    ], art)
-    label = ("Contribution to Kiro CLI: traced the Always allow approval loop to its policy compiler turning "
-             "backslashes into slashes in shell rules. Root cause and a fix in kirodotdev/Kiro#9507.")
-    return svg(*SLIM, label, body)
-
-
-def elysiumx(t):
-    a, p = (372, 92), (440, 92)
-    art = (
-        f'<circle cx="{a[0]}" cy="{a[1]}" r="18" fill="{t["accent"]}" fill-opacity="{t["tint"] * 1.6:.2f}" '
-        f'stroke="{t["accent"]}" stroke-opacity="{t["edge"]}"/>'
-        f'<path d="M{a[0]} {a[1] - 9}C{a[0] + 1.4} {a[1] - 2} {a[0] + 2} {a[1] - 1.4} {a[0] + 9} {a[1]}'
-        f'C{a[0] + 2} {a[1] + 1.4} {a[0] + 1.4} {a[1] + 2} {a[0]} {a[1] + 9}C{a[0] - 1.4} {a[1] + 2} {a[0] - 2} '
-        f'{a[1] + 1.4} {a[0] - 9} {a[1]}C{a[0] - 2} {a[1] - 1.4} {a[0] - 1.4} {a[1] - 2} {a[0]} {a[1] - 9}Z" '
-        f'fill="{t["accent"]}"/>'
-        f'<path d="M{a[0] + 24} {a[1]}H{p[0] - 26}" stroke="{t["subtle"]}" stroke-width="1.6" '
-        'stroke-dasharray="3 4" stroke-linecap="round"/>'
-        f'<path d="M{p[0] - 30} {a[1] - 4}l4 4-4 4" fill="none" stroke="{t["subtle"]}" stroke-width="1.6" '
-        'stroke-linecap="round" stroke-linejoin="round"/>'
-        f'<circle cx="{p[0]}" cy="{p[1]}" r="18" fill="{t["raised"]}" stroke="{t["border"]}"/>'
-        f'<circle cx="{p[0]}" cy="{p[1] - 4.5}" r="4.6" fill="{t["muted"]}"/>'
-        f'<path d="M{p[0] - 9} {p[1] + 10}a9 7.5 0 0 1 18 0Z" fill="{t["muted"]}"/>'
-        f'<circle cx="{p[0] + 13}" cy="{p[1] - 13}" r="7" fill="{t["green"]}" stroke="{t["card"]}" stroke-width="2"/>'
-        f'<path d="M{p[0] + 10} {p[1] - 13}l2 2 3.6-4" fill="none" stroke="#fff" stroke-width="1.6" '
-        'stroke-linecap="round" stroke-linejoin="round"/>'
-    )
-    body = slim_card(t, "SIDE PROJECT", "ElysiumX", [
-        "A public experiment in letting AI agents",
-        "run apps while people keep the final call.",
-    ], art)
-    label = ("Side project: ElysiumX, a public experiment in letting AI agents run apps while people keep the final "
-             "call. elysiumx.org")
-    return svg(*SLIM, label, body)
-
-
 # --------------------------------------------------------------------------------------------- buttons
 
 
@@ -930,7 +882,7 @@ def ai_tiles(t):
 
 CARDS = {
     "hero": hero, "opustock": opustock, "nyetok": nyetok, "havus": havus, "jambul": jambul,
-    "korupsi": korupsi, "kerinci": kerinci, "kiro": kiro, "elysiumx": elysiumx,
+    "korupsi": korupsi, "kerinci": kerinci,
     "btn-website": lambda t: button(t, "debikurnia.id", globe),
     "btn-linkedin": lambda t: button(t, "LinkedIn", linkedin),
     "btn-email": lambda t: button(t, "Email me", envelope, primary=True),
