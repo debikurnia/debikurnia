@@ -328,43 +328,6 @@ def app_card(t, name, art, desc, stat, labels, *, kicker="OPEN SOURCE Â· MACOS Â
     )
 
 
-def xspace(t):
-    wx, wy, ww, wh = 36, 30, 428, 96
-    pane = ww / 3
-    colors = [t["accent"], t["blue"], t["green"]]
-    art = [
-        f'<rect x="{wx}" y="{wy}" width="{ww}" height="{wh}" rx="10" fill="{t["raised"]}" stroke="{t["border"]}"/>',
-        f'<path d="M{wx} {wy + 21}H{wx + ww}" stroke="{t["border"]}"/>',
-    ]
-    for i, c in enumerate(["#ff5f57", "#febc2e", "#28c840"]):
-        art.append(f'<circle cx="{wx + 14 + i * 13}" cy="{wy + 10.5}" r="3.8" fill="{c}"/>')
-    for i, c in enumerate(colors):
-        px = wx + i * pane
-        # Tint each pane; the outer two follow the window's rounded bottom corners.
-        top, bottom, right = wy + 21, wy + wh, px + pane
-        if i == 0:
-            tint = f"M{px + 10:.1f} {bottom}a10 10 0 0 1-10-10V{top}H{right:.1f}V{bottom}Z"
-        elif i == 2:
-            tint = f"M{px:.1f} {top}H{right:.1f}V{bottom - 10}a10 10 0 0 1-10 10H{px:.1f}Z"
-        else:
-            tint = f"M{px:.1f} {top}H{right:.1f}V{bottom}H{px:.1f}Z"
-        art.append(f'<path d="{tint}" fill="{c}" fill-opacity=".06"/>')
-        if i:
-            art.append(f'<path d="M{px:.1f} {wy + 21}V{wy + wh}" stroke="{t["border"]}"/>')
-        art.append(f'<circle cx="{px + 20:.1f}" cy="{wy + 37}" r="7.5" fill="{c}"/>')
-        art.append(f'<rect x="{px + 33:.1f}" y="{wy + 33.5}" width="58" height="7" rx="3.5" fill="{t["fg"]}" '
-                   f'fill-opacity="{t["skeleton"] * 2:.2f}"/>')
-        for j, lw in enumerate([108, 88, 100]):
-            art.append(f'<rect x="{px + 14:.1f}" y="{wy + 54 + j * 13}" width="{lw}" height="6" rx="3" '
-                       f'fill="{t["fg"]}" fill-opacity="{t["skeleton"]}"/>')
-    body = app_card(t, "XSpace", "".join(art), "Isolated browser profiles in one window.",
-                    "In my test: 536 MB vs 964 MB in Chrome.", ["Swift + WebKit", "App Sandbox", "No telemetry"])
-    label = ("XSpace, open source macOS app under the MIT license: several isolated browser profiles in one window, "
-             "each with its own cookies and logins. Native Swift and WebKit; in my test the same pages used 536 MB "
-             "in XSpace versus 964 MB in Chrome. App Sandbox, no telemetry.")
-    return svg(*APP, label, body)
-
-
 def jambul(t):
     sx, sy, sw, sh = 36, 30, 428, 96
     cx = sx + sw / 2
@@ -523,7 +486,7 @@ def nyetok(t):
         stamp = "" if dashed else logo(t, x + bw - 16, top + bh - 16, 10, NYETOK_MAGENTA, NYETOK_N)
         return rim + contents + front + plate + stamp
 
-    xs = [250 - (4 * bw + 3 * gap) / 2 + i * (bw + gap) for i in range(4)]
+    xs = [250 - (3 * bw + 2 * gap) / 2 + i * (bw + gap) for i in range(3)]
     # Havus, the newest app, bobs out of its box with a few sparkles.
     hx = xs[0] + bw / 2 - 15
     havus_icon = (f'<g class="bob"><g transform="rotate(-8 {hx + 15} {top - 11})">'
@@ -533,24 +496,16 @@ def nyetok(t):
         for cx, cy, r, delay in [(xs[0] + 70, top - 25, 5.2, 0), (xs[0] + 16, top - 17, 3.6, 0.9),
                                  (xs[0] + 88, top - 13, 2.8, 1.6)]
     )
-    # XSpace: three panes in its icon's profile colors. Jambul: the island.
-    px = xs[1] + bw / 2 - 19.5
-    panes = "".join(
-        f'<rect x="{px + i * 14:g}" y="{top - 13 + (i % 2) * 3}" width="11" height="15" rx="2" fill="{c}"/>'
-        f'<rect x="{px + 2 + i * 14:g}" y="{top - 8 + (i % 2) * 3}" width="7" height="2" rx="1" fill="#fff" '
-        'fill-opacity=".8"/>'
-        for i, c in enumerate(["#0a84ff", "#30d158", "#ff9f0a"])
-    )
-    island = (f'<rect x="{xs[2] + bw / 2 - 15}" y="{top - 9}" width="30" height="10" rx="5" fill="#000"'
+    # Jambul: the island.
+    island = (f'<rect x="{xs[1] + bw / 2 - 15}" y="{top - 9}" width="30" height="10" rx="5" fill="#000"'
               + (' stroke="#fff" stroke-opacity=".14"' if t is THEMES["dark"] else "") + "/>"
-              f'<circle cx="{xs[2] + bw / 2 + 8}" cy="{top - 4}" r="2" fill="#3fb950"/>')
+              f'<circle cx="{xs[1] + bw / 2 + 8}" cy="{top - 4}" r="2" fill="#3fb950"/>')
     art = (
         f'<path d="M44 {floor + 0.75}H456" fill="none" {stroke()} stroke-linecap="round"/>'
         + box(xs[0], "HAVUS", havus_icon)
         + sparkles
-        + box(xs[1], "XSPACE", panes)
-        + box(xs[2], "JAMBUL", island)
-        + box(xs[3], "NEXT", dashed=True)
+        + box(xs[1], "JAMBUL", island)
+        + box(xs[2], "NEXT", dashed=True)
     )
     css = (
         "@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}"
@@ -683,7 +638,7 @@ def ai_tiles(t):
 
 
 CARDS = {
-    "hero": hero, "opustock": opustock, "nyetok": nyetok, "havus": havus, "xspace": xspace, "jambul": jambul,
+    "hero": hero, "opustock": opustock, "nyetok": nyetok, "havus": havus, "jambul": jambul,
     "kiro": kiro, "elysiumx": elysiumx,
     "btn-website": lambda t: button(t, "debikurnia.id", globe),
     "btn-linkedin": lambda t: button(t, "LinkedIn", linkedin),
