@@ -13,6 +13,7 @@ as they are now: GitHub draws them with the viewer's system font (San Francisco 
 Segoe UI on Windows), and widths differ a little between the two.
 """
 
+import math
 from html import escape
 from pathlib import Path
 
@@ -157,6 +158,15 @@ HAVUS_INK = "#0b0b0c"
 NYETOK_N = ("M288 728V288h104l129.98 151.64-40.88 112.31L392 448v280ZM736 296v440H632L502.02 584.36l40.88-112.31L632 "
             "576V296Z")
 NYETOK_MAGENTA = "#d6006f"
+# Korupsi: a gold envelope with a red seal (public/favicon.svg in XNyetok/korupsi), drawn at its own size, 38 by 25.
+KORUPSI_ENVELOPE = ('<rect width="38" height="25" rx="4" fill="#e3b04b"/><path d="M2 3.5L19 15.5L36 3.5" fill="none" '
+                    'stroke="#a87b23" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>'
+                    '<circle cx="19" cy="19" r="4.6" fill="#d9483b"/>')
+# Jelajah Kerinci: Gunung Kerinci over green hills (icons/icon.svg in XNyetok/Kerinciku), on its 512-unit grid; the
+# mountain's foot spans 36 to 476 at y 380.
+KERINCI_MOUNTAIN = ('<path d="M36 380L228 150Q256 130 284 150L476 380z" fill="#5f7d8c"/>'
+                    '<path d="M228 150Q256 130 284 150L326 200L294 186L268 218L240 182L194 206z" fill="#c9d6dc"/>'
+                    '<path d="M36 380L136 260Q212 310 256 286Q336 332 396 284L476 380z" fill="#3f8f5f"/>')
 
 
 def logo(t, x, y, size, tile, glyph, *, edge=False):
@@ -380,10 +390,10 @@ def jambul(t):
     )
     body = app_card(t, "Jambul", art, "A Dynamic Island for the MacBook notch.",
                     "In my test: 0% CPU idle, about 14 MB.",
-                    ["Timer", "Keep Awake", "Battery peeks", "AI usage limits"])
+                    ["Timer", "Keep Awake", "AI usage limits", "Claude Code sessions"])
     label = ("Jambul, open source macOS app under the MIT license: a Dynamic Island for the MacBook notch, with a "
-             "timer, Keep Awake, battery peeks and your AI usage limits. In my test it idled at 0% CPU and about 14 MB "
-             "of memory.")
+             "timer, Keep Awake, battery peeks, your AI usage limits and which Claude Code sessions are working, "
+             "waiting for you or done. In my test it idled at 0% CPU and about 14 MB of memory.")
     return svg(*APP, label, body, defs, css)
 
 
@@ -452,20 +462,22 @@ def havus(t):
         "@keyframes ok{0%,30%{opacity:0;transform:scale(.4)}36%,90%{opacity:1;transform:scale(1)}97%,100%{opacity:0}}"
     )
     body = app_card(t, "Havus", "".join(art), "A Mac cleaner that minds its own business.",
-                    "In my test: 1.5 MB app, about 34 MB idle.", ["Developer junk", "Uninstaller", "Trash first"],
-                    badge="NEW")
-    label = ("Havus, new open source macOS app under the MIT license: a lightweight Mac cleaner that minds its own "
-             "business. It clears caches, logs and developer junk, uninstalls apps with their leftovers and finds "
-             "large files you rarely open, and everything goes to the Trash first. In my test it is a 1.5 MB app that "
-             "idles at about 34 MB of memory, with no network access at all.")
+                    "In my test: 1.5 MB app, about 34 MB idle.",
+                    ["Developer junk", "Uninstaller", "Disk map", "Trash first"])
+    label = ("Havus, open source macOS app under the MIT license: a lightweight Mac cleaner that minds its own "
+             "business. It clears caches, logs and developer junk, uninstalls apps with their leftovers, finds large "
+             "files you rarely open, maps what fills your disk and turns off programs that start on their own, and "
+             "everything goes to the Trash first. It goes online only to check for updates, and only if you turn "
+             "that on. In my test it is a 1.5 MB app that idles at about 34 MB of memory.")
     return svg(*APP, label, body, css=css)
 
 
 def nyetok(t):
-    """Nyetok means stocking up: a shelf with a box per app, Havus popping out of the newest, and one for the next."""
+    """Nyetok means stocking up: a shelf with a box per project and a glimpse of what's in each, Gunung Kerinci
+    popping out of the newest, and an empty box for the next one."""
     ink, line = t["fg"], t["line_art"]
     # The shelf sits where the other cards' pictures end (y 126), so the text below lines up across a row.
-    bw, bh, gap, floor = 84, 52, 16, 125.25
+    bw, bh, gap, floor = 74, 52, 9, 125.25
     top = floor - bh
 
     def stroke(dashed=False):
@@ -479,33 +491,42 @@ def nyetok(t):
         front = (f'<rect x="{x}" y="{top}" width="{bw}" height="{bh}" rx="3" '
                  f'fill="{"none" if dashed else t["raised"]}" {stroke(dashed)}/>')
         plate_dash = ' stroke-dasharray="3 3"' if dashed else ""
-        plate = (f'<rect x="{x + 13}" y="{top + 15}" width="{bw - 26}" height="17" rx="3" fill="{t["card"]}" '
+        plate = (f'<rect x="{x + 9}" y="{top + 15}" width="{bw - 18}" height="17" rx="3" fill="{t["card"]}" '
                  f'stroke="{t["border"]}"{plate_dash}/>'
-                 + text(x + bw / 2 + 0.6, top + 26.9, label, size=9.5, fill=t["subtle"] if dashed else ink,
-                        weight=700, mono=True, spacing=1.2, anchor="middle"))
-        stamp = "" if dashed else logo(t, x + bw - 16, top + bh - 16, 10, NYETOK_MAGENTA, NYETOK_N)
+                 + text(x + bw / 2 + 0.5, top + 26.9, label, size=9.5, fill=t["subtle"] if dashed else ink,
+                        weight=700, mono=True, spacing=1, anchor="middle"))
+        stamp = "" if dashed else logo(t, x + bw - 15, top + bh - 15, 10, NYETOK_MAGENTA, NYETOK_N)
         return rim + contents + front + plate + stamp
 
-    xs = [250 - (3 * bw + 2 * gap) / 2 + i * (bw + gap) for i in range(3)]
-    # Havus, the newest app, bobs out of its box with a few sparkles.
-    hx = xs[0] + bw / 2 - 15
-    havus_icon = (f'<g class="bob"><g transform="rotate(-8 {hx + 15} {top - 11})">'
-                  + logo(t, hx, top - 27, 30, HAVUS_INK, HAVUS_H, edge=True) + "</g></g>")
+    xs = [250 - (5 * bw + 4 * gap) / 2 + i * (bw + gap) for i in range(5)]
+    mid = [x + bw / 2 for x in xs]
+    # Havus: its icon, leaning out of the box.
+    havus_icon = (f'<g transform="rotate(-8 {mid[0]:g} {top - 11})">'
+                  + logo(t, mid[0] - 15, top - 27, 30, HAVUS_INK, HAVUS_H, edge=True) + "</g>")
+    # Jambul: the island.
+    island = (f'<rect x="{mid[1] - 15:g}" y="{top - 9}" width="30" height="10" rx="5" fill="#000"'
+              + (' stroke="#fff" stroke-opacity=".14"' if t is THEMES["dark"] else "") + "/>"
+              f'<circle cx="{mid[1] + 8:g}" cy="{top - 4}" r="2" fill="#3fb950"/>')
+    # Korupsi: the envelope from its icon, seal and all.
+    envelope = (f'<g transform="rotate(9 {mid[2]:g} {top - 5}) translate({mid[2] - 14:g} {top - 14}) scale(.737)">'
+                + KORUPSI_ENVELOPE + "</g>")
+    # Jelajah Kerinci, the newest: Gunung Kerinci from its icon bobs out of the box, with a few sparkles.
+    k = 56 / 440
+    mountain = (f'<g class="bob"><g transform="translate({mid[3] - 256 * k:.2f} {top + 6 - 380 * k:.2f}) '
+                f'scale({k:.4f})">{KERINCI_MOUNTAIN}</g></g>')
     sparkles = "".join(
         sparkle(cx, cy, r, t["magenta"], f' class="grow tw" style="animation-delay:{delay}s"')
-        for cx, cy, r, delay in [(xs[0] + 70, top - 25, 5.2, 0), (xs[0] + 16, top - 17, 3.6, 0.9),
-                                 (xs[0] + 88, top - 13, 2.8, 1.6)]
+        for cx, cy, r, delay in [(mid[3] + 25, top - 26, 5.2, 0), (mid[3] - 27, top - 16, 3.6, 0.9),
+                                 (mid[3] + 33, top - 9, 2.8, 1.6)]
     )
-    # Jambul: the island.
-    island = (f'<rect x="{xs[1] + bw / 2 - 15}" y="{top - 9}" width="30" height="10" rx="5" fill="#000"'
-              + (' stroke="#fff" stroke-opacity=".14"' if t is THEMES["dark"] else "") + "/>"
-              f'<circle cx="{xs[1] + bw / 2 + 8}" cy="{top - 4}" r="2" fill="#3fb950"/>')
     art = (
         f'<path d="M44 {floor + 0.75}H456" fill="none" {stroke()} stroke-linecap="round"/>'
         + box(xs[0], "HAVUS", havus_icon)
-        + sparkles
         + box(xs[1], "JAMBUL", island)
-        + box(xs[2], "NEXT", dashed=True)
+        + box(xs[2], "KORUPSI", envelope)
+        + box(xs[3], "KERINCI", mountain)
+        + sparkles
+        + box(xs[4], "NEXT", dashed=True)
     )
     css = (
         "@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}"
@@ -513,13 +534,283 @@ def nyetok(t):
         "@keyframes tw{0%,100%{opacity:.3;transform:scale(.55)}50%{opacity:1;transform:scale(1)}}"
         ".tw{animation:tw 2.6s ease-in-out infinite both}"
     )
-    body = app_card(t, "Nyetok", art, "Small Mac apps that are actually useful.",
-                    "Native Swift, MIT-licensed, made in Indonesia.", ["Free", "No account", "No telemetry"],
+    body = app_card(t, "Nyetok", art, "Small apps that are actually useful.",
+                    "Mac apps and browser games, made in Indonesia.", ["Free", "Open source", "No account"],
                     kicker="HOME OF MY APPS · NYETOK.ID", color=t["magenta"],
                     mark=logo(t, 36, 171, 26, NYETOK_MAGENTA, NYETOK_N))
-    label = ("Nyetok, the home of my open source Mac apps, at nyetok.id: small Mac apps that are actually useful. "
-             "Native Swift, MIT-licensed and made in Indonesia; free, with no account and no telemetry.")
+    label = ("Nyetok, the home of my open source apps, at nyetok.id: small apps that are actually useful. Mac apps "
+             "and browser games, MIT-licensed and made in Indonesia; free, with no account.")
     return svg(*APP, label, body, css=css)
+
+
+# ------------------------------------------------------------------------------------------ game cards
+
+
+def browser(t, url, page):
+    """A browser window over the card's picture area, `url` in its address bar and `page` drawn inside it.
+    Returns the window's clip path, for <defs>, and the window."""
+    x, y, w, h, bar, pill = 36, 30, 428, 96, 18, 150
+    clip = (f'<clipPath id="page"><path d="M{x} {y + bar}H{x + w}V{y + h - 10}a10 10 0 0 1-10 10H{x + 10}'
+            f'a10 10 0 0 1-10-10Z"/></clipPath>')
+    window = (
+        f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="10" fill="{t["raised"]}"/>'
+        f'<g clip-path="url(#page)">{page}</g>'
+        f'<path d="M{x} {y + bar}H{x + w}" stroke="{t["border"]}"/>'
+        f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="10" fill="none" stroke="{t["border"]}"/>'
+        + "".join(f'<circle cx="{x + 14 + i * 13}" cy="{y + bar / 2:g}" r="3.8" fill="{c}"/>'
+                  for i, c in enumerate(["#ff5f57", "#febc2e", "#28c840"]))
+        + f'<rect x="{x + (w - pill) / 2:g}" y="{y + 3.5:g}" width="{pill}" height="11" rx="5.5" fill="{t["card"]}" '
+        f'stroke="{t["border"]}"/>'
+        + text(x + w / 2, y + 12.1, escape(url), size=8.5, fill=t["muted"], mono=True, anchor="middle")
+    )
+    return clip, window
+
+
+def pixels(x, y, rows, palette, p=2, outline=None):
+    """Pixel art: one character per pixel ("." for none), drawn as runs of p-unit squares. `outline` rings the
+    sprite one pixel wide in that color, just outside the given rows, as the game's own sprites are."""
+    if outline:
+        cells = {(i, j): ch for j, row in enumerate(rows) for i, ch in enumerate(row) if ch != "."}
+        ring = {(i + di, j + dj) for i, j in cells for di, dj in ((1, 0), (-1, 0), (0, 1), (0, -1))} - cells.keys()
+        cells.update(dict.fromkeys(ring, "@"))
+        cols = max(len(row) for row in rows)
+        rows = ["".join(cells.get((i, j), ".") for i in range(-1, cols + 1)) for j in range(-1, len(rows) + 1)]
+        palette, x, y = {**palette, "@": outline}, x - p, y - p
+    runs = {}  # one path per color keeps the file small
+    for j, row in enumerate(rows):
+        i = 0
+        while i < len(row):
+            k = i
+            while k < len(row) and row[k] == row[i]:
+                k += 1
+            if row[i] != ".":
+                runs.setdefault(row[i], []).append(f"M{x + i * p:g} {y + j * p:g}h{(k - i) * p:g}v{p:g}h-{(k - i) * p:g}z")
+            i = k
+    return "".join(f'<path d="{"".join(d)}" fill="{palette[ch]}"/>' for ch, d in runs.items())
+
+
+def star(cx, cy, r, color, extra=""):
+    """A five-point star with rounded tips, like the stars on Jelajah Kerinci's stamps."""
+    points = " ".join(
+        f"{cx + (r if i % 2 == 0 else r * 0.47) * math.cos(math.pi * (i / 5 - 0.5)):.2f},"
+        f"{cy + (r if i % 2 == 0 else r * 0.47) * math.sin(math.pi * (i / 5 - 0.5)):.2f}"
+        for i in range(10)
+    )
+    return (f'<polygon points="{points}" fill="{color}" stroke="{color}" stroke-width="{r * 0.25:.2f}" '
+            f'stroke-linejoin="round"{extra}/>')
+
+
+# Korupsi's own colors, from the game. Its page keeps them in both themes, as a screenshot would.
+KR = {
+    "wall": "#223238", "ink": "#0d1418", "lamp": "#eef5dd", "wood_hi": "#dba76a", "wood": "#b07a48",
+    "wood_dk": "#7c5030", "paper": "#ece4cc", "gold": "#f2c14e", "gold_dk": "#a87b23", "red": "#d9483b",
+    "white": "#e8ecef", "pad": "#f08a24", "rod": "#5b6e68", "blind": "#e57c61", "blind_dk": "#b8573f",
+}
+KR_SPRITE = {"p": "#34333f", "s": "#d9a577", "k": KR["ink"], "c": "#a8946a", "d": "#6a5a3e", "b": "#5a3a26",
+             "h": "#1a1a1a", "w": KR["white"], "r": KR["red"], "n": KR["paper"], "g": KR["gold"],
+             "f": KR["gold_dk"], "q": KR["wood"], "l": "#9fd3f0", "a": "#2b3446"}
+OFFICIAL = (  # the player: a peci, a safari suit and a briefcase, mid-jump
+    "...pppp...",
+    "..pppppp..",
+    "...ssss...",
+    "...sssks..",
+    "...ssss...",
+    "..cccccc..",
+    ".scccccccs",
+    "...cccccbb",
+    "...ddddbbb",
+    "..dd..dd..",
+    ".dd....dd.",
+    ".kk....kk.",
+)
+AUDITOR = (  # the audit team: glasses, a white shirt with a red tie and ID card, and a clipboard
+    "...hhhh..",
+    "..hhhhhh.",
+    "..lsssh..",
+    "..ssss...",
+    "...ss....",
+    "..wwwwww.",
+    ".nwwrwwww",
+    "qnnwrwwws",
+    "qqnwrrww.",
+    "...wwww..",
+    "...aaaa..",
+    "...a..a..",
+    "..kk.kk..",
+)
+ENVELOPE = (  # the game's own envelope: a gold body, a dark-gold border and flap, and a red ribbon
+    ".fffffffff.",
+    "fgggggggggf",
+    "ffgggggggff",
+    "fgffgrgffgf",
+    "fgggfrfgggf",
+    "fgggggggggf",
+    ".fffffffff.",
+)
+
+
+def korupsi(t):
+    """Korupsi in a browser: an official in a peci jumps from desk to desk for the envelopes, while a stamp comes
+    down and an auditor waits on the top desk."""
+    k = KR
+    x0, y0, x1, y1 = 36, 48, 464, 126  # the page, below the address bar
+
+    def desk(x, top, w):
+        """A desk to land on: a two-tone top over a darker body with a drawer, outlined like the sprites."""
+        mid = x + w / 2
+        return (f'<rect x="{x - 1}" y="{top - 1}" width="{w + 2}" height="7" fill="{k["ink"]}"/>'
+                f'<rect x="{x}" y="{top}" width="{w}" height="2" fill="{k["wood_hi"]}"/>'
+                f'<rect x="{x}" y="{top + 2}" width="{w}" height="3" fill="{k["wood"]}"/>'
+                f'<rect x="{x + 4}" y="{top + 6}" width="{w - 8}" height="{y1 - top}" fill="{k["ink"]}"/>'
+                f'<rect x="{x + 5}" y="{top + 6}" width="{w - 10}" height="{y1 - top}" fill="{k["wood_dk"]}"/>'
+                f'<rect x="{mid - 7:g}" y="{top + 10}" width="14" height="5" fill="{k["ink"]}"/>'
+                f'<rect x="{mid - 6:g}" y="{top + 11}" width="12" height="3" fill="{k["paper"]}"/>'
+                f'<rect x="{mid - 2:g}" y="{top + 12}" width="4" height="1" fill="{k["ink"]}"/>')
+
+    def hud(x, label, color):
+        w = 0.6 * 8 * len(label) + 12
+        return (f'<rect x="{x:g}" y="{y0 + 5}" width="{w:g}" height="13" rx="2" fill="{k["ink"]}" fill-opacity=".9"/>'
+                + text(x + 6, y0 + 14.4, label, size=8, fill=color, weight=700, mono=True)), w
+
+    floor_chip, fw = hud(44, "01 KELURAHAN", k["white"])
+    money_chip, _ = hud(44 + fw + 4, "RP 1.500.000", k["gold"])
+    lamps = "".join(
+        f'<path d="M{lx - 12} {y0 + 2.5}H{lx + 12}L{lx + 30} {y0 + 34}H{lx - 30}Z" fill="{k["lamp"]}" '
+        f'fill-opacity=".05"/><rect x="{lx - 12}" y="{y0}" width="24" height="2.5" fill="{k["lamp"]}"/>'
+        for lx in (236, 338))
+    # A window with its blinds down, on the wall behind the top desk.
+    blinds = (f'<rect x="{x1 - 124}" y="{y0 + 10}" width="30" height="26" fill="{k["ink"]}"/>'
+              + "".join(f'<rect x="{x1 - 122}" y="{y0 + 12 + i * 4}" width="26" height="3" '
+                        f'fill="{k["blind"] if i % 2 == 0 else k["blind_dk"]}"/>' for i in range(6)))
+    # A proyek fiktif: the red-and-white ledge that gives way, tipping already.
+    plank = (f'<g transform="rotate(7 328 90)"><rect x="313" y="87" width="30" height="6" fill="{k["ink"]}"/>'
+             + "".join(f'<rect x="{314 + i * 4}" y="88" width="4" height="4" '
+                       f'fill="{k["red"] if i % 2 == 0 else k["white"]}"/>' for i in range(7))
+             + "</g>")
+    # The stamp hangs over the middle desk and comes down on it every few seconds.
+    sx = 271
+    stamp = (f'<g class="slam"><rect x="{sx - 1}" y="{y0 - 30}" width="2" height="44" fill="{k["rod"]}"/>'
+             f'<rect x="{sx - 5}" y="{y0 + 13}" width="10" height="7" fill="{k["ink"]}"/>'
+             f'<rect x="{sx - 4}" y="{y0 + 14}" width="8" height="5" fill="{k["wood"]}"/>'
+             f'<rect x="{sx - 9}" y="{y0 + 19}" width="18" height="8" fill="{k["ink"]}"/>'
+             f'<rect x="{sx - 8}" y="{y0 + 20}" width="16" height="4" fill="{k["wood_dk"]}"/>'
+             f'<rect x="{sx - 8}" y="{y0 + 24}" width="16" height="2" fill="{k["pad"]}"/></g>')
+    page = (
+        f'<rect x="{x0}" y="{y0}" width="{x1 - x0}" height="{y1 - y0}" fill="{k["wall"]}"/>'
+        + lamps
+        + f'<g shape-rendering="crispEdges">{blinds}'
+        + desk(44, 108, 88) + desk(200, 96, 92) + desk(362, 82, 94)
+        + plank
+        + pixels(94, 94, ENVELOPE, KR_SPRITE) + pixels(220, 82, ENVELOPE, KR_SPRITE)
+        + pixels(378, 68, ENVELOPE, KR_SPRITE)
+        + pixels(418, 56, AUDITOR, KR_SPRITE, outline=k["ink"])
+        + stamp
+        + f'<g class="hop">{pixels(152, 68, OFFICIAL, KR_SPRITE, outline=k["ink"])}</g></g>'
+        + f'<path d="M122 106Q134 84 150 88" fill="none" stroke="{k["white"]}" stroke-opacity=".35" stroke-width="1.5" '
+        'stroke-dasharray="2 3" stroke-linecap="round"/>'
+        + floor_chip + money_chip
+    )
+    clip, window = browser(t, "korupsi.web.id", page)
+    css = (
+        "@keyframes hop{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}"
+        ".hop{animation:hop 1.5s ease-in-out infinite}"
+        "@keyframes slam{0%,55%{transform:translateY(0)}62%,70%{transform:translateY(20px)}"
+        "88%,100%{transform:translateY(0)}}"
+        ".slam{animation:slam 3.2s ease-in-out infinite}"
+    )
+    body = app_card(t, "Korupsi", window, "Climb a bureaucracy, one office at a time.",
+                    "Pixel art drawn in code, about 28 KB gzipped.",
+                    ["Run, jump, dash", "Ten titles to earn", "Touch controls"],
+                    kicker="OPEN SOURCE · BROWSER GAME · MIT")
+    label = ("Korupsi, open source browser game under the MIT license: a pixel-art platformer about climbing a "
+             "bureaucracy, one office at a time, with the audit team already in the lobby. Run, jump and dash past "
+             "the auditors and the stamps, pick up envelopes on the way, and earn one of ten titles. The pixel art is "
+             "drawn in code, the whole game is about 28 KB gzipped, and it plays on phones too.")
+    return svg(*APP, label, body, clip, css)
+
+
+# Jelajah Kerinci's own colors, from the game's map. Like Korupsi's, its page keeps them in both themes.
+KK = {
+    "grass": "#9ad97f", "forest": "#3aa565", "pine": "#1d6b43", "tea": "#63b65a", "tea_dk": "#4f9f4c",
+    "water": "#4aa8e8", "water_lt": "#a5d4f4", "trail": "#f7f5d9", "star": "#f5a800", "ink": "#2b2118",
+    "cloud": "#f0faec", "leaf": "#c6f38e", "fish": "#f5b942", "rock": "#5f7d8c",
+}
+
+
+def kerinci(t):
+    """Jelajah Kerinci in a browser: the game's map of Kerinci, with the summit of Gunung Kerinci still locked, stamps
+    earned at the tea gardens of Kayu Aro and at Danau Kerinci, and the trail between them."""
+    k = KK
+    x0, y0, x1, y1 = 36, 48, 464, 126
+
+    def pin(cx, cy, inner, glyph, badge=""):
+        return (f'<circle cx="{cx}" cy="{cy + 1.2}" r="9.5" fill="#000" fill-opacity=".14"/>'
+                f'<circle cx="{cx}" cy="{cy}" r="9.5" fill="#fff"/><circle cx="{cx}" cy="{cy}" r="7" fill="{inner}"/>'
+                + glyph + badge)
+
+    def stamp_star(cx, cy, delay):
+        return (f'<g class="grow pop" style="animation-delay:{delay}s"><circle cx="{cx}" cy="{cy}" r="5" fill="#fff"/>'
+                + star(cx, cy, 3.6, k["star"]) + "</g>")
+
+    forest = (f'<path d="M{x0} {y0}H70Q80 64 70 80T76 108Q80 118 72 {y1}H{x0}Z" fill="{k["forest"]}"/>'
+              + "".join(f'<path d="M{px} {py - 10}L{px + 5} {py}H{px - 5}Z" fill="{k["pine"]}"/>'
+                        for px, py in [(46, 62), (60, 74), (48, 88), (61, 100), (47, 113), (58, 124)]))
+    km = 0.25  # Gunung Kerinci, from the icon, its foot below the page
+    mountain = (f'<g transform="translate({150 - 256 * km:g} {132 - 380 * km:g}) scale({km})">{KERINCI_MOUNTAIN}</g>'
+                f'<g class="drift"><ellipse cx="154" cy="64" rx="8.5" ry="4.2" fill="{k["cloud"]}" fill-opacity=".95"/>'
+                f'<ellipse cx="163" cy="57.5" rx="6" ry="3.2" fill="{k["cloud"]}" fill-opacity=".75"/></g>')
+    tea = (f'<ellipse cx="258" cy="110" rx="46" ry="18" fill="{k["tea"]}"/>'
+           + "".join(f'<path d="M{258 - w} {cy}Q258 {cy - 8} {258 + w} {cy}" fill="none" stroke="{k["tea_dk"]}" '
+                     'stroke-width="2.2" stroke-linecap="round"/>' for w, cy in [(30, 102), (40, 110), (36, 119)]))
+    water = (f'<path d="M292 116C314 128 330 100 356 110" fill="none" stroke="{k["water"]}" stroke-width="4" '
+             'stroke-linecap="round"/>'
+             f'<ellipse cx="404" cy="112" rx="52" ry="16" fill="{k["water"]}"/>'
+             f'<ellipse cx="394" cy="107" rx="22" ry="3.6" fill="{k["water_lt"]}" fill-opacity=".7"/>')
+    trail = (f'<path class="trail" d="M150 92Q204 68 258 90T404 100" fill="none" stroke="{k["trail"]}" '
+             'stroke-width="2.6" stroke-dasharray="0 6" stroke-linecap="round"/>')
+    # Gunung Kerinci's pin is locked: the summit opens last.
+    mx, my = 150, 92
+    mountain_pin = pin(mx, my, k["rock"],
+                       f'<path d="M{mx - 4.6} {my + 3}L{mx - 1} {my - 3.2}L{mx + 1} {my - 0.8}L{mx + 2.4} {my - 2.6}'
+                       f'L{mx + 5} {my + 3}Z" fill="#fff"/>',
+                       f'<circle cx="{mx + 7.5}" cy="{my - 7.5}" r="4.6" fill="#fff"/>'
+                       f'<path d="M{mx + 6.3} {my - 8.4}v-1.3a1.2 1.2 0 0 1 2.4 0v1.3" fill="none" stroke="{k["rock"]}" '
+                       'stroke-width="1"/>'
+                       f'<rect x="{mx + 5.6}" y="{my - 8.4}" width="3.8" height="3.2" rx=".6" fill="{k["rock"]}"/>')
+    tx, ty = 258, 90
+    tea_pin = pin(tx, ty, k["forest"],
+                  f'<path d="M{tx - 4} {ty + 3.6}Q{tx - 4.4} {ty - 4} {tx + 4} {ty - 4}Q{tx + 4.2} {ty + 3.6} {tx - 4} '
+                  f'{ty + 3.6}Z" fill="{k["leaf"]}"/><path d="M{tx - 3} {ty + 2.6}L{tx + 2.6} {ty - 3}" '
+                  f'stroke="{k["forest"]}" stroke-width=".9"/>',
+                  stamp_star(tx + 7.5, ty - 7.5, 0))
+    lx, ly = 404, 100
+    lake_pin = pin(lx, ly, k["water"],
+                   f'<ellipse cx="{lx - 0.8}" cy="{ly}" rx="3.6" ry="2.5" fill="{k["fish"]}"/>'
+                   f'<path d="M{lx + 2} {ly}L{lx + 5} {ly - 2.6}V{ly + 2.6}Z" fill="{k["fish"]}"/>'
+                   f'<circle cx="{lx - 2.4}" cy="{ly - 0.5}" r=".7" fill="{k["ink"]}"/>',
+                   stamp_star(lx + 7.5, ly - 7.5, 1.6))
+    hud = (f'<rect x="44" y="{y0 + 6.5}" width="84" height="16" rx="8" fill="#000" fill-opacity=".12"/>'
+           f'<rect x="44" y="{y0 + 5}" width="84" height="16" rx="8" fill="#fff"/>'
+           + star(54, y0 + 13, 4.4, k["star"])
+           + text(62, y0 + 16.4, "Stempel 2/6", size=9.5, fill=k["ink"], weight=700))
+    page = (f'<rect x="{x0}" y="{y0}" width="{x1 - x0}" height="{y1 - y0}" fill="{k["grass"]}"/>'
+            + forest + mountain + tea + water + trail + mountain_pin + tea_pin + lake_pin + hud)
+    clip, window = browser(t, "kerinciku.web.id", page)
+    css = (
+        "@keyframes walk{to{stroke-dashoffset:-12}}.trail{animation:walk 1.4s linear infinite}"
+        "@keyframes pop{0%,74%,100%{transform:scale(1)}82%{transform:scale(1.35)}90%{transform:scale(.92)}}"
+        ".pop{animation:pop 4.8s ease-in-out infinite}"
+        "@keyframes drift{0%,100%{transform:translateX(0)}50%{transform:translateX(4px)}}"
+        ".drift{animation:drift 6s ease-in-out infinite}"
+    )
+    body = app_card(t, "Jelajah Kerinci", window, "A map game for young kids about Kerinci, Sumatra.",
+                    "About 150 KB, and it plays offline.", ["Five mini-games", "Stamps to collect", "Kerinci words"],
+                    kicker="OPEN SOURCE · BROWSER GAME · MIT", badge="NEW")
+    label = ("Jelajah Kerinci, new open source browser game under the MIT license: young children explore a map of "
+             "Kerinci, Sumatra, play a short mini-game at each place and collect stamps, each opening a fact and a "
+             "word in the Kerinci language. Five places are playable so far. About 150 KB, made for phones held "
+             "upright, and it plays offline after one visit.")
+    return svg(*APP, label, body, clip, css)
 
 
 def slim_card(t, eyebrow_label, name, lines, art):
@@ -639,7 +930,7 @@ def ai_tiles(t):
 
 CARDS = {
     "hero": hero, "opustock": opustock, "nyetok": nyetok, "havus": havus, "jambul": jambul,
-    "kiro": kiro, "elysiumx": elysiumx,
+    "korupsi": korupsi, "kerinci": kerinci, "kiro": kiro, "elysiumx": elysiumx,
     "btn-website": lambda t: button(t, "debikurnia.id", globe),
     "btn-linkedin": lambda t: button(t, "LinkedIn", linkedin),
     "btn-email": lambda t: button(t, "Email me", envelope, primary=True),
